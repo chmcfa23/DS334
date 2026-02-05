@@ -11,3 +11,34 @@ listing:
 page-layout: full
 title-block-banner: true
 ---
+
+*2/2/2025*
+
+For my inaugural DS334 blog post, I thought it would be most appropriate to christen my very first website with my blossoming love for tuberculosis. Tuberculosis (or TB) is a disease of the respiratory tract, and one of our oldest biological "companions." With all the time we have spent together, TB has had many millennia to foil every attempt we make at preventing, diagnosing, and treating it- a fight that continues to this day.
+
+Streptomycin is our "old faithful" of pharmaceutical antibiotics, and the go-to for most bacterial infections. But tuberculosis is no common cold, and across the 80 since streptomycin's discovery, it has already managed to develop strains resistant to old faithful.
+
+Working with the R package "medicaldata," I was delighted to find that it contained a dataset that deals with this exact relationship called "strep_tb".
+
+The code for loading this data in is shown below:
+
+```{r}
+#install.packages("medicaldata")
+strep_tb <- medicaldata::strep_tb
+```
+
+There are 13 variables in this dataset and 107 cases, each representing one patient hospitilized with tuberculosis. It is divided into two groups in the "arm" column- a 'control' group that did not recieve streptomycin and a 'streptomycin' group that did.
+
+Other variables that I am interested in: "improved," which is whether the patient improved at the end of the study; "rad_num," which is the *degree* to which a patient recovered (1 being death and 6 being considerable improvement); and "baseline_condition," which describes how poorly the patient was doing at the start of the experiment.
+
+My main question is how streptomycin affected these recovery variables.
+
+To prepare this dataset for answering this question, I want to first create a new, numeric variable for the patients' baseline condition, so I can compare it to the already existing post-treatment condition.
+
+```{r}
+strep_tb <- strep_tb %>%
+  mutate(
+    baseline_num = case
+  )
+
+```
