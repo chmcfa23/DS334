@@ -195,13 +195,136 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 
-<p>This is a post with executable code.</p>
+<p><em>2/2/2025</em></p>
+<p><strong>Introduction</strong></p>
+<p>For my inaugural DS334 blog post, I thought it would be most appropriate to christen my very first website with my blossoming love for tuberculosis. Tuberculosis (or TB) is a disease of the respiratory tract, and one of our oldest biological “companions.” With all the time we have spent together, TB has had many millennia to foil every attempt we make at preventing, diagnosing, and treating it- a fight that continues to this day.</p>
+<p>Streptomycin is our “old faithful” of pharmaceutical antibiotics, and the go-to for most bacterial infections. But tuberculosis is no common cold, and across the 80 since streptomycin’s discovery, it has already managed to develop strains resistant to old faithful.</p>
+<p>Working with the R package “medicaldata,” I was delighted to find that it contained a dataset that deals with this exact relationship called “strep_tb”.</p>
+<p>The code for loading this data in is shown below:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages("medicaldata") </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>strep_tb <span class="ot">&lt;-</span> medicaldata<span class="sc">::</span>strep_tb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>There are 13 variables in this dataset and 107 cases, each representing one patient hospitilized with tuberculosis. It is divided into two groups in the “arm” column- a ‘control’ group that did not recieve streptomycin and a ‘streptomycin’ group that did.</p>
+<p>Here is a sample of the data:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(strep_tb)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<pre><code>  patient_id     arm dose_strep_g dose_PAS_g gender baseline_condition
+1       0001 Control            0          0      M             1_Good
+2       0002 Control            0          0      F             1_Good
+3       0003 Control            0          0      F             1_Good
+4       0004 Control            0          0      M             1_Good
+5       0005 Control            0          0      F             1_Good
+6       0006 Control            0          0      M             1_Good
+  baseline_temp baseline_esr baseline_cavitation strep_resistance
+1    1_98-98.9F      2_11-20                 yes       1_sens_0-8
+2  3_100-100.9F      2_11-20                  no       1_sens_0-8
+3    1_98-98.9F      3_21-50                  no       1_sens_0-8
+4    1_98-98.9F      3_21-50                  no       1_sens_0-8
+5    2_99-99.9F      3_21-50                  no       1_sens_0-8
+6  3_100-100.9F      3_21-50                  no       1_sens_0-8
+               radiologic_6m rad_num improved
+1 6_Considerable_improvement       6     TRUE
+2     5_Moderate_improvement       5     TRUE
+3     5_Moderate_improvement       5     TRUE
+4     5_Moderate_improvement       5     TRUE
+5     5_Moderate_improvement       5     TRUE
+6 6_Considerable_improvement       6     TRUE</code></pre>
 </div>
 </div>
+<p>Other variables that I am interested in: “improved,” which is whether the patient improved at the end of the study; “rad_num,” which is the <em>degree</em> to which a patient recovered (1 being death and 6 being considerable improvement); and “baseline_condition,” which describes how poorly the patient was doing at the start of the experiment.</p>
+<p><strong>My main question</strong> is how streptomycin affected these recovery variables.</p>
+<p>To prepare this dataset for answering this question, I want to first create a new, numeric variable for the patients’ baseline condition, so I can compare it to the already existing post-treatment condition.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)  </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>strep_tb <span class="ot">&lt;-</span> strep_tb <span class="sc">%&gt;%</span>   <span class="fu">mutate</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">base_num =</span> <span class="fu">case_when</span>(baseline_condition <span class="sc">==</span> <span class="st">"1_Good"</span> <span class="sc">~</span> <span class="dv">3</span>,              baseline_condition <span class="sc">==</span> <span class="st">"2_Fair"</span> <span class="sc">~</span> <span class="dv">2</span>,                              baseline_condition <span class="sc">==</span> <span class="st">"3_Poor"</span> <span class="sc">~</span> <span class="dv">1</span>)          </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  ) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><strong>Analyses</strong></p>
+<p>Now, I want to see if a patient’s baseline condition appears to have any correlation with the degree to which they improved. This I can do with a simple scatterplot. Because there are only a few whole numbers, I am going to use geom_jitter instead of geom_point.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)  </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> strep_tb, <span class="fu">aes</span>(<span class="at">x =</span> base_num, <span class="at">y =</span> rad_num)) <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Well, that looks kind of weird and not very helpful. Maybe if I facet it by streptomycin treatment, it will make a little more sense.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> strep_tb, <span class="fu">aes</span>(<span class="at">x =</span> base_num, <span class="at">y =</span> rad_num)) <span class="sc">+</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>(<span class="at">width =</span> <span class="fl">0.15</span>, <span class="at">height =</span> <span class="fl">0.15</span>) <span class="sc">+</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>arm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In addition to facetting, I also drastically decreased the amount of jitter to lessen the impression that the data are not integers, and to make the relationship a little more clear. It’s still not a “good” visualization, but for the data I’m working with, it’s something.</p>
+<p>Here we can see that yes, there is some relationship between a patient’s baseline condition and how drastically they improved after the study. The better their starting condition (increasing from 1), the greater the degree to which they improved (rad_num, with 1 being death and 6 being considerable recovery).</p>
+<p>Additionally, we see that when treated with streptomycin, fewer people died (had a rad_num of 1) and more people experienced greater recovery.</p>
+<p>Now that a relationship between pre and post-treatment condition has been established, I am more comfortable answering my original question: “What effect does streptomycin have on the degree of recovery?”</p>
+<p>For this, a simple facetted histogram would be the best option for visuualization.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> strep_tb, <span class="fu">aes</span>(<span class="at">x =</span> rad_num)) <span class="sc">+</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>arm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>But this is a kind of ugly graph. The bars are too thin, making the data look disconnected, and the x-axis both 1) doesn’t have a very descriptive label and 2) does not show the odd numbers.</p>
+<p>So I think I’ll fix it.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> strep_tb, <span class="fu">aes</span>(<span class="at">x =</span> rad_num)) <span class="sc">+</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="dv">1</span>, <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">fill =</span> <span class="st">"blue"</span>) <span class="sc">+</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"TB Patient Recovery With and Without Streptomycin"</span>, <span class="at">x =</span> <span class="st">"Radiologic Number"</span>, <span class="at">caption =</span> <span class="st">"*Radiologic Number represents the degree to which patients recovered after the experiment, with 6 </span><span class="sc">\n</span><span class="st"> indicating 'Considerable Improvement,' and 1  indicating that the patient passed away"</span>) <span class="sc">+</span>   <span class="fu">scale_x_continuous</span>(<span class="at">breaks=</span><span class="fu">seq</span>(<span class="dv">1</span>,<span class="dv">6</span>,<span class="dv">1</span>)) <span class="sc">+</span> </span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>arm)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This is the final graph, I made the x-axis prettier and more useful, bulked up the bars, and added a nice little caption and a title that should help to provide context.</p>
+<p><strong>Conclusion</strong></p>
+<p>I think I definitely could have picked a better dataset for this blog, there wasn’t much variety in the variables in terms of type (numeric, categorical, etc…) and in the actual levels (eg. there only being 6 possible values for the recovery degrees.) But given what I had, I think I generated two decent graphs.</p>
+<p>If I had more time to find a dataset, I probably would have looked for something with less “subjectivity”, like vital statistics, time in hospital, age and sex information, etc… But you win some and lose some</p>
+<p><strong>Connection to Class Ideas</strong></p>
+<p>I tried to be creative and use stuff we learned in class. I made a point to use dplyr to create that Baseline Condition variable (because for some reason they didn’t think to include a purely numeric variable for that like they did with the “radiologic_6m” one??) And I tried to show off two graphs, one with two quantitatives and one with a mix. If there were more categorical variables, I would have liked to do a barplot or something. A lesson for next time.</p>
+<p>Also, since I sort of wanted to pretend that I was generating that histogram for an actual research paper, I played around with some graph features to make it look a little more professional.</p>
 
 
 
