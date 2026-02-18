@@ -1,104 +1,159 @@
 ---
-title: "Post With Code"
-author: "Harlow Malloc"
-date: "2026-01-28"
-categories: [news, code, analysis]
-image: "image.jpg"
+title: "The Olympic Games"
+listing:
+  contents: posts
+  feed: true
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+page-layout: full
+title-block-banner: true
 ---
 
-*2/2/2025*
+*2/16/2025*
 
 **Introduction**
 
-For my inaugural DS334 blog post, I thought it would be most appropriate to christen my very first website with my blossoming love for tuberculosis. Tuberculosis (or TB) is a disease of the respiratory tract, and one of our oldest biological "companions." With all the time we have spent together, TB has had many millennia to foil every attempt we make at preventing, diagnosing, and treating it- a fight that continues to this day.
+The Olympic Games. Every two years, (most of) the world's countries opt to set aside their domestic and international conflicts and send some of their most talented athletes overseas and over mountains to show off for around two or three weeks in hopes of bringing back a shiny gold medal or two... or two hundred.
 
-Streptomycin is our "old faithful" of pharmaceutical antibiotics, and the go-to for most bacterial infections. But tuberculosis is no common cold, and across the 80 since streptomycin's discovery, it has already managed to develop strains resistant to old faithful.
+Lots and lots of events going on, and so little time to watch them all... So for this blog post, I have decided to satisfy my patriotic duty by dedicating a whole post to **showcasing the USA's totally undebatable athletic superiority.**
 
-Working with the R package "medicaldata," I was delighted to find that it contained a dataset that deals with this exact relationship called "strep_tb".
+To reach this end, I scoured the depths of Github and eventually found a dataset that looked like it wouldn't send my little undergrad Bio major head into psychosis: all_olympic_medalists.csv, shared by "sainsdataid" at <https://github.com/sainsdataid/olympics-medalist-dataset/blob/main/all_olympic_medalists.csv>
 
-The code for loading this data in is shown below:
-
-```{r}
-#install.packages("medicaldata") 
-strep_tb <- medicaldata::strep_tb
-```
-
-There are 13 variables in this dataset and 107 cases, each representing one patient hospitilized with tuberculosis. It is divided into two groups in the "arm" column- a 'control' group that did not recieve streptomycin and a 'streptomycin' group that did.
-
-Here is a sample of the data:
+Here, I read in the data:
 
 ```{r}
-head(strep_tb)
+library(readr)
+
+olympics_df <- read_csv("C:/Users/Clair/OneDrive/Classes/data_visualization/Data/all_olympic_medalists.csv")
 ```
 
-Other variables that I am interested in: "improved," which is whether the patient improved at the end of the study; "rad_num," which is the *degree* to which a patient recovered (1 being death and 6 being considerable improvement); and "baseline_condition," which describes how poorly the patient was doing at the start of the experiment.
+There are a whopping 20,247 entries in this dataset, presumably covering every person who has ever medalled since the very first Olympic Games in 1896. In every sport. The dataset covers 10 variable columns, varying in helpfulness. The ones I am most interested in are:
 
-**My main question** is how streptomycin affected these recovery variables.
+**season** (winter or summer) and **year** held.
 
-To prepare this dataset for answering this question, I want to first create a new, numeric variable for the patients' baseline condition, so I can compare it to the already existing post-treatment condition.
+The **country** where the medallist is from.
+
+The type of **medal** (bronze, silver, gold) earned.
+
+The **games** variable which describes the year and location of the event.
+
+The **event_gender** ("Men's", "Women's", or "Mixed")
+
+And the **sport** and **event_name**, which describe the overall "type" of sport, and the "subevent", respectively. Ex// "swimming" and "100m freestyle".
+
+**Tidying**
+
+Right off the bat, there's some things I want to change about this data. Firstly, I want to turn the **games** variable into the **host_city** variable, because we already have a year variable.
 
 ```{r}
-library(dplyr)  
-strep_tb <- strep_tb %>%   mutate(
-  base_num = case_when(baseline_condition == "1_Good" ~ 3,              baseline_condition == "2_Fair" ~ 2,                              baseline_condition == "3_Poor" ~ 1)          
-  ) 
+library(dplyr)
+library(tidyr)
+
+olympics_df_tidy <-  olympics_df %>%
+  separate(games, c("junk", "host_city")) %>%
+  select(-junk)
 ```
 
-**Analyses**
-
-Now, I want to see if a patient's baseline condition appears to have any correlation with the degree to which they improved. This I can do with a simple scatterplot. Because there are only a few whole numbers, I am going to use geom_jitter instead of geom_point.
+I also want to have a column for the **host_country**. After much fiddling, I found that the 'maps' package we've used in the past also contains a 'cities' dataframe that should have the countries that those cities are located in, so I will now *attempt* to join these two datasets.
 
 ```{r}
-library(ggplot2)  
-ggplot(data = strep_tb, aes(x = base_num, y = rad_num)) +
-  geom_jitter()
+library(maps)
+#data("world.cities")
+
+#world.cities <- world.cities
+
+#olympics_df_tidy <- left_join(olympics_df_tidy, world.cities, join_by(host_city == name))
+
+#olympics_df_tidy <- olympics_df_tidy %>%
+  #filter(!is.na(season)) # to remove cities/countries that never hosted the 
+                         # olympics
+
+#head(olympics_df_tidy)
+
 ```
 
-Well, that looks kind of weird and not very helpful. Maybe if I facet it by streptomycin treatment, it will make a little more sense.
+**Primary Visualizations**
+
+Okay, so after much fiddling, I could simply not figure out how to connect the **host_cities** to their countries for my beautiful mapping plans. I just kept creating larger and larger datasets. At one point I think I had about 20 million cases and I do NOT want to crash my computer, so. We will forego the map for now. But someday. Someday I *will* make a world map of all the gold medals we have won.
+
+Let's make a lollipop plot instead, of the countries with the top 10 number of gold medals.
 
 ```{r}
-ggplot(data = strep_tb, aes(x = base_num, y = rad_num)) +
-  geom_jitter(width = 0.15, height = 0.15) + 
-  facet_wrap(~arm)
+library(forcats)
+library(ggplot2)
+
+gold_top_10 <- olympics_df_tidy %>%
+  filter(medal == "Gold") %>%
+  group_by(country) %>%
+  summarize(
+  n_gold = n()
+  ) %>%
+  slice_max(n_gold, n = 10) %>%
+  mutate(
+    country = fct_reorder(country, n_gold)
+    )
+  
+ggplot(data = gold_top_10, aes(x=n_gold, y = country)) +
+  geom_segment(aes(yend = country, x = 0, xend = n_gold, show.legend = FALSE)) +
+  geom_point(show.legend = FALSE) +
+  theme_minimal() +
+  labs(x = "Number of Olympic Gold Medals", title = "Top 10 Countries With The Most Olympic Gold Medals")
+  
 ```
 
-In addition to facetting, I also drastically decreased the amount of jitter to lessen the impression that the data are not integers, and to make the relationship a little more clear. It's still not a "good" visualization, but for the data I'm working with, it's something.
-
-Here we can see that yes, there is some relationship between a patient's baseline condition and how drastically they improved after the study. The better their starting condition (increasing from 1), the greater the degree to which they improved (rad_num, with 1 being death and 6 being considerable recovery).
-
-Additionally, we see that when treated with streptomycin, fewer people died (had a rad_num of 1) and more people experienced greater recovery.
-
-Now that a relationship between pre and post-treatment condition has been established, I am more comfortable answering my original question: "What effect does streptomycin have on the degree of recovery?"
-
-For this, a simple facetted histogram would be the best option for visuualization.
+I would like to change the colors of the top 3 lines to reflect the gold, silver, and bronze "gold-medal earning" medals of these top 3 teams. For this, I will use a case_when argument, and give the top 3 "medallist" countries their very own character levels that I can use to assign colors.
 
 ```{r}
-ggplot(data = strep_tb, aes(x = rad_num)) + 
-  geom_histogram() + 
-  facet_wrap(~arm)
+gold_top_10 <- gold_top_10 %>%
+  mutate(
+    place = case_when(n_gold == 1177 ~ 1,
+                     n_gold == 473 ~ 2,
+                     n_gold == 307 ~ 3,
+                     n_gold < 307 ~ 4),
+    place = factor(place)
+  )
+
+ggplot(data = gold_top_10, aes(x=n_gold, y = country, color = place, show.legend = FALSE)) +
+  geom_segment(aes(yend = country, x = 0, xend = n_gold), show.legend = FALSE) +
+  geom_point(show.legend = FALSE) +
+  theme_minimal() +
+  scale_color_manual(values = c("gold","gray", "sienna2","blue")) +
+  labs(x = "Number of Olympic Gold Medals", title = "Top 10 Countries With The Most Olympic Gold Medals", y = "Country")
+
 ```
 
-But this is a kind of ugly graph. The bars are too thin, making the data look disconnected, and the x-axis both 1) doesn't have a very descriptive label and 2) does not show the odd numbers.
+Gorgeous. Almost gorgeous enough to make me forget about my map.
 
-So I think I'll fix it.
+Here we see that, with the data in the dataframe, the U.S. far surpasses its runner-up, the defunct USSR as well as its progeny, the Russian Federation. It has about 3 times as many golds as the next most successful *active* olympic competitor, Germany. In times of global and domestic turmoil, I suppose it is nice to find these little reasons to be patriotic.
+
+I think I also want to make a line map showing the number of each medal type the U.S. has earned over the years. This will give us an idea of the breakdown of our athletes' successes across the years.
 
 ```{r}
-ggplot(data = strep_tb, aes(x = rad_num)) + 
-  geom_histogram(binwidth = 1, color = "black", fill = "blue") + 
-  labs(title = "TB Patient Recovery With and Without Streptomycin", x = "Radiologic Number", caption = "*Radiologic Number represents the degree to which patients recovered after the experiment, with 6 \n indicating 'Considerable Improvement,' and 1  indicating that the patient passed away") +   scale_x_continuous(breaks=seq(1,6,1)) + 
-  facet_wrap(~arm)
+medals_US <- olympics_df_tidy %>%
+   filter(country == "United States") %>%
+   group_by(year, medal) %>%
+   summarize(
+     n_medals = n()
+   ) 
+
+ggplot(data = medals_US, aes(x = year, y = n_medals, color = medal)) +
+  geom_line() +
+  scale_color_manual(values = c("sienna2","gold", "gray"))
+  
+  
 ```
 
-This is the final graph, I made the x-axis prettier and more useful, bulked up the bars, and added a nice little caption and a title that should help to provide context.
+There are some nitpicks with this graph. If I had more time and knowledge, I would like to expand the 'year' axis to make it less cramped. There also appears to be some odd, uncharacteristic "spikiness" in the data around the 2000s. It is worth investigating the cause of that, such as the number of events held in those years. But that is a question for a future blog post.
 
-**Conclusion**
+For now, I am satisfied with these two visualizations.
 
-I think I definitely could have picked a better dataset for this blog, there wasn't much variety in the variables in terms of type (numeric, categorical, etc...) and in the actual levels (eg. there only being 6 possible values for the recovery degrees.) But given what I had, I think I generated two decent graphs.
+**Connection to Class**
 
-If I had more time to find a dataset, I probably would have looked for something with less "subjectivity", like vital statistics, time in hospital, age and sex information, etc... But you win some and lose some
+Well I *tried* to do some mapping, and I like to think I got pretty close a couple times. I did discover that 'cities' dataset within the 'maps' package, which I hope to someday be able to incorporate into the 'worlddata" dataset within the same package. I did learn a lot about the join\_\* functions, and in general what *not* to do when trying to join two very large dataframes.
 
-**Connection to Class Ideas**
+Other than that, I think this analysis provided some more quality review of dplyr. I made some good use of the summarize() function to create my plots. I am especially proud of the solution I came up with for coloring the top 3 countries in my lollipop plot, creating a kind of "fake" variable for and 1st, 2nd, 3rd places as well as something to code the rest of the countries as.
 
-I tried to be creative and use stuff we learned in class. I made a point to use dplyr to create that Baseline Condition variable (because for some reason they didn't think to include a purely numeric variable for that like they did with the "radiologic_6m" one??) And I tried to show off two graphs, one with two quantitatives and one with a mix. If there were more categorical variables, I would have liked to do a barplot or something. A lesson for next time.
-
-Also, since I sort of wanted to pretend that I was generating that histogram for an actual research paper, I played around with some graph features to make it look a little more professional.
+I definitely hope to do some more work with this dataset in the future.
