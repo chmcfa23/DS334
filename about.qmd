@@ -1,5 +1,5 @@
 ---
-title: "About"
+title: "About This Blog"
 image: profile.jpg
 about:
   template: jolla
@@ -12,8 +12,7 @@ about:
       href: https://linkedin.com
     - icon: github
       text: Github
-      href: https://github.com
-
+      href: https://github.com/chmcfa23
 ---
 
-About this blog
+A collection of blog posts made for Data Visualization, Spring 2026.
