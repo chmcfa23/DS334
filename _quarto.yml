@@ -5,6 +5,7 @@ project:
 website:
   description: "Adventures in STAT-334"
   title: "Data Science 2k26"
+  site-url: "https://chmcfa23.github.io/DS334/"
   navbar:
     right:
       - about.qmd
