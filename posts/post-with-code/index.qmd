@@ -157,3 +157,9 @@ Well I *tried* to do some mapping, and I like to think I got pretty close a coup
 Other than that, I think this analysis provided some more quality review of dplyr. I made some good use of the summarize() function to create my plots. I am especially proud of the solution I came up with for coloring the top 3 countries in my lollipop plot, creating a kind of "fake" variable for and 1st, 2nd, 3rd places as well as something to code the rest of the countries as.
 
 I definitely hope to do some more work with this dataset in the future.
+
+```{r}
+library(readr)
+worldcities <- read_csv("C:/Users/Clair/OneDrive/Classes/data_visualization/Data/worldcities.csv")
+all_olympic_medalists <- read_csv("C:/Users/Clair/OneDrive/Classes/data_visualization/Data/all_olympic_medalists.csv")
+```
