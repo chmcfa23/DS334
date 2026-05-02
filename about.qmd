@@ -1,5 +1,5 @@
 ---
-title: "About This Blog"
+title: "About Me"
 image: profile.jpg
 about:
   template: jolla
@@ -12,4 +12,4 @@ about:
       href: https://github.com/chmcfa23
 ---
 
-A collection of blog posts made for Data Visualization, Spring 2026.
+A collection of blog posts made for my Data Visualization class, Spring 2026.
