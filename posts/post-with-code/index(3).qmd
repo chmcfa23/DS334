@@ -1,5 +1,5 @@
 ---
-title: "Exploring North American Bigfoot Sightings"
+title: "Bigfoot"
 listing:
   contents: posts
   feed: true
@@ -225,7 +225,8 @@ plot_quality <- ggplot(data = pred_quality, aes(x=visibility, y=predicted))+
                                          Title = `title`,
                                          County = county,
                                          Classification = classification
-                                         ), alpha = 0.5)
+                                         ), alpha = 0.5) +
+  theme(base_size = 24)
 
 ggplotly(plot_quality, tooltip = c("Title", "County", "Classification"))
 ```
