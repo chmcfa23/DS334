@@ -13,22 +13,42 @@ title-block-banner: true
 ---
 
 ```{r}
-#| message: false
-#| warning: false
-#install.packages("leaflet")
-#install.packages("tigris")
-#install.packages("USABoundaries")
-#install.packages("ggeffects")
+#| message: true
+#| warning: true
+
+print("Starting library load")
+
 library(leaflet)
+print("leaflet OK")
+
 library(readr)
+print("readr OK")
+
 library(dplyr)
+print("dplyr OK")
+
 library(lubridate)
-library(tigris)
+print("lubridate OK")
+
 library(sf)
+print("sf OK")
+
+library(tigris)
+print("tigris OK")
+
 library(ggplot2)
+print("ggplot2 OK")
+
 library(broom)
+print("broom OK")
+
 library(ggeffects)
+print("ggeffects OK")
+
 library(plotly)
+print("plotly OK")
+
+print("All libraries loaded successfully")
 ```
 
 ## **Introduction**
@@ -235,3 +255,5 @@ So this graph is a little difficult to interpret, given the nature of the data, 
 ## **Conclusions**
 
 Overall, the main takeaways from this project were that Washington is the Bigfoot capital of the United States, having had the lead since 1970 and not giving up its title once in the 50+ years since. In the same visualization, we also noted that Oregon and California have both experienced a significant plateau since 2010, though the significance and cause of this pattern is unknown. Additionally, in a linear regression based on various climate variables, we also noticed that snow weather is significantly more likely to be considered credible than a rainy encounter, and that credibility goes *up* as the intensity of the snow increases.
+
+
